@@ -18,10 +18,13 @@ vi.mock('lucide-react', () => ({
 }));
 
 const mockOnAliasSubmit = vi.fn();
+const mockCheckAliasUniqueness = vi.fn();
 
 describe('AliasEntry', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default to returning true (unique) for most tests
+    mockCheckAliasUniqueness.mockResolvedValue(true);
   });
 
   afterEach(() => {
@@ -29,7 +32,7 @@ describe('AliasEntry', () => {
   });
 
   it('renders the form with correct elements', () => {
-    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} />);
+    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} />);
     
     expect(screen.getByRole('heading', { name: 'Join Chat' })).toBeInTheDocument();
     expect(screen.getByText('Choose a unique alias to start messaging')).toBeInTheDocument();
@@ -40,7 +43,7 @@ describe('AliasEntry', () => {
 
   it('shows validation error for empty alias', async () => {
     const user = userEvent.setup();
-    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} />);
+    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} />);
     
     const input = screen.getByPlaceholderText('Enter your alias');
     const submitButton = screen.getByRole('button', { name: 'Join Chat' });
@@ -53,7 +56,7 @@ describe('AliasEntry', () => {
 
   it('shows validation error for alias too short', async () => {
     const user = userEvent.setup();
-    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} />);
+    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} />);
     
     const input = screen.getByPlaceholderText('Enter your alias');
     
@@ -66,7 +69,7 @@ describe('AliasEntry', () => {
 
   it('shows validation error for alias too long', async () => {
     const user = userEvent.setup();
-    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} />);
+    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} />);
     
     const input = screen.getByPlaceholderText('Enter your alias');
     
@@ -79,7 +82,7 @@ describe('AliasEntry', () => {
 
   it('shows validation error for invalid characters', async () => {
     const user = userEvent.setup();
-    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} />);
+    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} />);
     
     const input = screen.getByPlaceholderText('Enter your alias');
     
@@ -92,8 +95,10 @@ describe('AliasEntry', () => {
 
   it('shows loading state during uniqueness check', async () => {
     const user = userEvent.setup();
+    // Make the check take some time to show loading state
+    mockCheckAliasUniqueness.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve(true), 100)));
     
-    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} />);
+    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} />);
     
     const input = screen.getByPlaceholderText('Enter your alias');
     
@@ -107,7 +112,7 @@ describe('AliasEntry', () => {
   it('shows success icon for unique alias', async () => {
     const user = userEvent.setup();
     
-    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} />);
+    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} />);
     
     const input = screen.getByPlaceholderText('Enter your alias');
     
@@ -121,7 +126,7 @@ describe('AliasEntry', () => {
   it('enables submit button only when alias is valid and unique', async () => {
     const user = userEvent.setup();
     
-    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} />);
+    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} />);
     
     const input = screen.getByPlaceholderText('Enter your alias');
     const submitButton = screen.getByRole('button', { name: 'Join Chat' });
@@ -138,7 +143,7 @@ describe('AliasEntry', () => {
   it('calls onAliasSubmit with correct alias when form is submitted', async () => {
     const user = userEvent.setup();
     
-    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} />);
+    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} />);
     
     const input = screen.getByPlaceholderText('Enter your alias');
     const submitButton = screen.getByRole('button', { name: 'Join Chat' });
@@ -155,7 +160,7 @@ describe('AliasEntry', () => {
   });
 
   it('shows loading state when isLoading prop is true', () => {
-    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} isLoading={true} />);
+    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} isLoading={true} />);
     
     const input = screen.getByPlaceholderText('Enter your alias');
     const submitButton = screen.getByRole('button', { name: 'Joining...' });
@@ -168,7 +173,7 @@ describe('AliasEntry', () => {
   it('transforms alias to lowercase', async () => {
     const user = userEvent.setup();
     
-    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} />);
+    render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} />);
     
     const input = screen.getByPlaceholderText('Enter your alias');
     const submitButton = screen.getByRole('button', { name: 'Join Chat' });

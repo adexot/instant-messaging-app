@@ -4,14 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '../../@/components/ui/button';
 import { Input } from '../../@/components/ui/input';
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
   FormMessage,
-  FormDescription 
+  FormDescription
 } from '../../@/components/ui/form';
 import { Card } from '../../@/components/ui/card';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
@@ -27,11 +27,12 @@ const aliasSchema = z.object({
 });
 
 interface AliasEntryProps {
-  onAliasSubmit: (alias: string) => void;
+  onAliasSubmit: (alias: string) => Promise<void>;
+  checkAliasUniqueness: (alias: string) => Promise<boolean>;
   isLoading?: boolean;
 }
 
-export function AliasEntry({ onAliasSubmit, isLoading = false }: AliasEntryProps) {
+export function AliasEntry({ onAliasSubmit, checkAliasUniqueness, isLoading = false }: AliasEntryProps) {
   const [isCheckingUniqueness, setIsCheckingUniqueness] = useState(false);
   const [uniquenessError, setUniquenessError] = useState<string | null>(null);
   const [isUnique, setIsUnique] = useState<boolean | null>(null);
@@ -47,7 +48,7 @@ export function AliasEntry({ onAliasSubmit, isLoading = false }: AliasEntryProps
   const watchedAlias = form.watch('alias');
 
   useEffect(() => {
-    const checkAliasUniqueness = async (alias: string) => {
+    const checkUniqueness = async (alias: string) => {
       if (!alias || alias.length < 2) {
         setIsUnique(null);
         setUniquenessError(null);
@@ -65,14 +66,9 @@ export function AliasEntry({ onAliasSubmit, isLoading = false }: AliasEntryProps
       setUniquenessError(null);
 
       try {
-        // For now, simulate the database check since instant-db query method needs to be properly configured
-        // In a real implementation, this would query the database
-        await new Promise(resolve => setTimeout(resolve, 300)); // Simulate network delay
-        
-        // Simulate checking for existing users - this would be replaced with actual database query
-        const existingUser = false; // Placeholder - would check db.users for matching alias
-        
-        if (existingUser) {
+        const isUnique = await checkAliasUniqueness(alias);
+
+        if (!isUnique) {
           setIsUnique(false);
           setUniquenessError('This alias is already taken. Please choose a different one.');
         } else {
@@ -90,12 +86,12 @@ export function AliasEntry({ onAliasSubmit, isLoading = false }: AliasEntryProps
 
     const timeoutId = setTimeout(() => {
       if (watchedAlias) {
-        checkAliasUniqueness(watchedAlias);
+        checkUniqueness(watchedAlias);
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [watchedAlias]);
+  }, [watchedAlias, checkAliasUniqueness]);
 
   const onSubmit = async (data: AliasFormData) => {
     if (!isUnique) {
@@ -172,9 +168,9 @@ export function AliasEntry({ onAliasSubmit, isLoading = false }: AliasEntryProps
               )}
             />
 
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={!isFormValid || isLoading}
             >
               {isLoading ? (

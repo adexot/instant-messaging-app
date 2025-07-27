@@ -29,7 +29,7 @@
   - Write unit tests for alias validation logic
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-- [ ] 5. Build user management and online presence system
+- [x] 5. Build user management and online presence system
   - Implement user join functionality with instant-db user creation
   - Create online users list component with real-time updates
   - Implement user presence tracking (join/leave notifications)
