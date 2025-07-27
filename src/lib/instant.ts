@@ -1,9 +1,9 @@
 import { init, tx, id } from '@instantdb/react';
-import type { User, Message, TypingStatus } from '@/types';
+import type { User, Message, TypingStatus } from '../types';
 
 // Initialize instant-db
 const db = init({
-  appId: process.env.VITE_INSTANT_APP_ID || 'your-app-id',
+  appId: import.meta.env.VITE_INSTANT_APP_ID || 'your-app-id',
 });
 
 // Connection management utilities

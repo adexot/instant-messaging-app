@@ -127,3 +127,20 @@ export function MessageError({ message, onRetry, className }: MessageErrorProps)
     </div>
   );
 }
+
+interface ErrorMessageProps {
+  message: string;
+  className?: string;
+}
+
+export function ErrorMessage({ message, className }: ErrorMessageProps) {
+  return (
+    <div className={cn(
+      'flex items-center justify-center space-x-2 text-destructive',
+      className
+    )}>
+      <AlertCircle className="h-5 w-5" />
+      <span className="text-sm">{message}</span>
+    </div>
+  );
+}

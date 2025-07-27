@@ -3,7 +3,7 @@ import { Card } from '../../@/components/ui/card';
 import { ScrollArea } from '../../@/components/ui/scroll-area';
 import { Badge } from '../../@/components/ui/badge';
 import { Users, Circle } from 'lucide-react';
-import type { User } from '@/types';
+import type { User } from '../types';
 
 interface OnlineUsersListProps {
   users: User[];
@@ -96,77 +96,86 @@ export function OnlineUsersList({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* User count header */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-muted-foreground" />
-            <span className="font-medium">Online Users</span>
-          </div>
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <Circle className="h-2 w-2 fill-green-500 text-green-500" />
-            {userCount}
-          </Badge>
-        </div>
-      </Card>
-
       {/* Online users list */}
-      <Card className="p-4">
-        <ScrollArea className="h-64">
-          <div className="space-y-2">
+      <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+        {/* Header */}
+        <div className="border-b bg-muted/30 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium text-sm">Online</span>
+            </div>
+            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+              <Circle className="h-2 w-2 fill-green-500 text-green-500" />
+              {userCount}
+            </Badge>
+          </div>
+        </div>
+
+        {/* Users List */}
+        <ScrollArea className="h-80">
+          <div className="p-3">
             {users.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No users online
-              </p>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Users className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">No users online</p>
+              </div>
             ) : (
-              users.map((user) => (
-                <div
-                  key={user.id}
-                  className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-                    user.id === currentUser?.id 
-                      ? 'bg-primary/10 border border-primary/20' 
-                      : 'hover:bg-muted/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
+              <div className="space-y-1">
+                {users.map((user) => (
+                  <div
+                    key={user.id}
+                    className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+                      user.id === currentUser?.id 
+                        ? 'bg-primary/10 border border-primary/20 shadow-sm' 
+                        : 'hover:bg-muted/50'
+                    }`}
+                  >
                     <div className="relative">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                        <span className="text-sm font-medium">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border">
+                        <span className="text-sm font-semibold text-primary">
                           {user.alias.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <Circle className="absolute -bottom-0.5 -right-0.5 h-3 w-3 fill-green-500 text-green-500" />
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {user.alias}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium truncate">
+                          {user.alias}
+                        </p>
                         {user.id === currentUser?.id && (
-                          <span className="text-xs text-muted-foreground ml-1">(you)</span>
+                          <Badge variant="outline" className="text-xs px-1.5 py-0">you</Badge>
                         )}
-                      </p>
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         Joined {formatTimeAgo(new Date(user.joinedAt))}
                       </p>
                     </div>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
         </ScrollArea>
-      </Card>
+      </div>
 
       {/* Join/Leave notifications */}
       {notifications.length > 0 && (
-        <Card className="p-3">
-          <div className="space-y-2">
+        <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+          <div className="border-b bg-muted/30 px-4 py-2">
+            <span className="font-medium text-sm">Activity</span>
+          </div>
+          <div className="p-3 space-y-2">
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`text-xs p-2 rounded transition-all duration-300 ${
+                className={`text-xs p-2 rounded-lg transition-all duration-300 border ${
                   notification.type === 'joined'
-                    ? 'bg-green-50 text-green-700 border border-green-200'
-                    : 'bg-orange-50 text-orange-700 border border-orange-200'
+                    ? 'bg-green-50 text-green-700 border-green-200'
+                    : 'bg-orange-50 text-orange-700 border-orange-200'
                 }`}
               >
                 <span className="font-medium">{notification.user.alias}</span>
@@ -174,7 +183,7 @@ export function OnlineUsersList({
               </div>
             ))}
           </div>
-        </Card>
+        </div>
       )}
     </div>
   );

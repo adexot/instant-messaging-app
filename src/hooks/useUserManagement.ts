@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useQuery } from '@instantdb/react';
-import { db, dbHelpers, queries } from '@/lib/instant';
-import type { User } from '@/types';
+import { db, dbHelpers, queries } from '../lib/instant';
+import type { User } from '../types';
 
 export interface UseUserManagementReturn {
   currentUser: User | null;
@@ -20,7 +19,7 @@ export function useUserManagement(): UseUserManagementReturn {
   const [error, setError] = useState<string | null>(null);
 
   // Query online users with real-time updates
-  const { data, isLoading: queryLoading, error: queryError } = useQuery(queries.onlineUsers());
+  const { data, isLoading: queryLoading, error: queryError } = db.useQuery(queries.onlineUsers());
   
   const onlineUsers = data?.users || [];
   const userCount = onlineUsers.length;

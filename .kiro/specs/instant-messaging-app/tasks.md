@@ -37,7 +37,7 @@
   - Write tests for user presence functionality
   - _Requirements: 1.5, 3.1, 3.2, 3.3, 3.4_
 
-- [ ] 6. Create message display and chat interface
+- [x] 6. Create message display and chat interface
   - Implement MessageList component with scrollable message display
   - Create MessageBubble component with sender/receiver styling
   - Add timestamp display and message formatting

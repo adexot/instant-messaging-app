@@ -36,7 +36,7 @@ export function ChatLayout({ children, sidebar, className }: ChatLayoutProps) {
       <div className="flex-1 flex flex-col min-w-0">
         {children}
       </div>
-      
+
       {/* Sidebar - hidden on mobile, shown on desktop */}
       {sidebar && (
         <div className="hidden md:flex md:w-80 lg:w-96 border-l bg-muted/30">
