@@ -22,7 +22,11 @@ export function useUserManagement(): UseUserManagementReturn {
   const { data, isLoading: queryLoading, error: queryError } = db.useQuery(queries.onlineUsers());
   
   const onlineUsers = (data?.users as User[]) || [];
-  const userCount = onlineUsers.length;
+  // Sort users by joinedAt since instant-db can't order by non-indexed fields
+  const sortedOnlineUsers = [...onlineUsers].sort((a, b) => 
+    new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
+  );
+  const userCount = sortedOnlineUsers.length;
 
   // Handle window/tab close to mark user offline
   useEffect(() => {
@@ -136,7 +140,7 @@ export function useUserManagement(): UseUserManagementReturn {
 
   return {
     currentUser,
-    onlineUsers,
+    onlineUsers: sortedOnlineUsers,
     userCount,
     isLoading: isLoading || queryLoading,
     error: error || (queryError ? 'Failed to load users' : null),

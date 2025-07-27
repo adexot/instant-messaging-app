@@ -170,7 +170,6 @@ export const queries = {
     users: {
       $: {
         where: { isOnline: true },
-        order: { joinedAt: 'asc' as const },
       },
     },
   }),
@@ -180,7 +179,6 @@ export const queries = {
     messages: {
       $: {
         where: before ? { timestamp: { $lt: before } } : {},
-        order: { timestamp: 'desc' as const },
         limit,
       },
     },
@@ -191,21 +189,15 @@ export const queries = {
     typingStatus: {
       $: {
         where: { isTyping: true },
-        order: { lastTypingTime: 'desc' as const },
       },
     },
   }),
 
   // Get all data for chat interface
   chatData: () => ({
-    users: {
-      $: {
-        order: { joinedAt: 'asc' as const },
-      },
-    },
+    users: {},
     messages: {
       $: {
-        order: { timestamp: 'asc' as const },
         limit: 100, // Load last 100 messages initially
       },
     },

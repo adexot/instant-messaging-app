@@ -67,7 +67,7 @@ describe('useUserManagement', () => {
       lastSeen: new Date(),
     }));
 
-    mockedQueries.onlineUsers.mockReturnValue({ users: { $: { where: { isOnline: true }, order: { joinedAt: 'asc' } } } });
+    mockedQueries.onlineUsers.mockReturnValue({ users: { $: { where: { isOnline: true } } } });
 
     // Mock window events
     Object.defineProperty(window, 'addEventListener', {
