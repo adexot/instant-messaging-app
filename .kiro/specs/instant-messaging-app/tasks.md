@@ -53,7 +53,7 @@
   - Add retry mechanism for failed message sends
   - _Requirements: 2.1, 2.2, 7.1, 7.2, 7.3, 7.4_
 
-- [ ] 8. Add typing indicators functionality
+- [x] 8. Add typing indicators functionality
   - Implement typing detection in MessageInput component
   - Create TypingIndicator component to display active typers
   - Add typing status broadcast through instant-db
