@@ -21,7 +21,7 @@ export function useUserManagement(): UseUserManagementReturn {
   // Query online users with real-time updates
   const { data, isLoading: queryLoading, error: queryError } = db.useQuery(queries.onlineUsers());
   
-  const onlineUsers = data?.users || [];
+  const onlineUsers = (data?.users as User[]) || [];
   const userCount = onlineUsers.length;
 
   // Handle window/tab close to mark user offline
@@ -98,6 +98,8 @@ export function useUserManagement(): UseUserManagementReturn {
       const newUser = dbHelpers.users.create({
         alias: alias.toLowerCase().trim(),
         isOnline: true,
+        lastSeen: new Date(),
+        joinedAt: new Date(),
       });
 
       // Save user to database

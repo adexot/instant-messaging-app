@@ -61,24 +61,83 @@ export const dbHelpers = {
       tx.messages[messageId].update({ status }),
 
     send: async (content: string, senderId: string, senderAlias: string) => {
-      const message = dbHelpers.messages.create({
+      const messageId = id();
+      const message = {
+        id: messageId,
         content: content.trim(),
         senderId,
         senderAlias,
+        timestamp: new Date(),
         status: 'sending' as const,
-      });
+      };
 
       try {
-        await db.transact([tx.messages[message.id].update(message)]);
-        // Update status to delivered after successful send
-        await db.transact([
-          tx.messages[message.id].update({ status: 'delivered' })
-        ]);
+        // Optimistic update - add message with sending status
+        await db.transact([tx.messages[messageId].update(message)]);
+        
+        // Simulate network delay for status update
+        setTimeout(async () => {
+          try {
+            // Update status to delivered after successful persistence
+            await db.transact([
+              tx.messages[messageId].update({ status: 'delivered' })
+            ]);
+          } catch (error) {
+            console.error('Failed to update message status to delivered:', error);
+            // Update status to failed if delivery confirmation fails
+            await db.transact([
+              tx.messages[messageId].update({ status: 'failed' })
+            ]);
+          }
+        }, 500); // Small delay to show sending status
+        
         return message;
       } catch (error) {
-        // Update status to failed if send fails
+        console.error('Failed to send message:', error);
+        // Update status to failed if initial send fails
+        try {
+          await db.transact([
+            tx.messages[messageId].update({ status: 'failed' })
+          ]);
+        } catch (updateError) {
+          console.error('Failed to update message status to failed:', updateError);
+        }
+        throw error;
+      }
+    },
+
+    retry: async (messageId: string) => {
+      try {
+        // Update status to sending
         await db.transact([
-          tx.messages[message.id].update({ status: 'failed' })
+          tx.messages[messageId].update({ 
+            status: 'sending',
+            timestamp: new Date() // Update timestamp for retry
+          })
+        ]);
+
+        // Simulate retry delay
+        setTimeout(async () => {
+          try {
+            // Update status to delivered after successful retry
+            await db.transact([
+              tx.messages[messageId].update({ status: 'delivered' })
+            ]);
+          } catch (error) {
+            console.error('Failed to retry message:', error);
+            // Update status back to failed if retry fails
+            await db.transact([
+              tx.messages[messageId].update({ status: 'failed' })
+            ]);
+            throw error;
+          }
+        }, 1000); // Longer delay for retry to simulate network recovery
+        
+      } catch (error) {
+        console.error('Failed to retry message:', error);
+        // Ensure status is set to failed
+        await db.transact([
+          tx.messages[messageId].update({ status: 'failed' })
         ]);
         throw error;
       }
@@ -111,7 +170,7 @@ export const queries = {
     users: {
       $: {
         where: { isOnline: true },
-        order: { by: 'joinedAt', direction: 'asc' as const },
+        order: { joinedAt: 'asc' as const },
       },
     },
   }),
@@ -121,7 +180,7 @@ export const queries = {
     messages: {
       $: {
         where: before ? { timestamp: { $lt: before } } : {},
-        order: { by: 'timestamp', direction: 'desc' as const },
+        order: { timestamp: 'desc' as const },
         limit,
       },
     },
@@ -132,7 +191,7 @@ export const queries = {
     typingStatus: {
       $: {
         where: { isTyping: true },
-        order: { by: 'lastTypingTime', direction: 'desc' as const },
+        order: { lastTypingTime: 'desc' as const },
       },
     },
   }),
@@ -141,12 +200,12 @@ export const queries = {
   chatData: () => ({
     users: {
       $: {
-        order: { by: 'joinedAt', direction: 'asc' as const },
+        order: { joinedAt: 'asc' as const },
       },
     },
     messages: {
       $: {
-        order: { by: 'timestamp', direction: 'asc' as const },
+        order: { timestamp: 'asc' as const },
         limit: 100, // Load last 100 messages initially
       },
     },

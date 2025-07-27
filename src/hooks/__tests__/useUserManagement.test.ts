@@ -2,12 +2,9 @@ import { renderHook, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // Mock instant-db
-vi.mock('@instantdb/react', () => ({
-  useQuery: vi.fn(),
-}));
-
-vi.mock('@/lib/instant', () => ({
+vi.mock('../../lib/instant', () => ({
   db: {
+    useQuery: vi.fn(),
     transact: vi.fn(),
     queryOnce: vi.fn(),
     tx: {
@@ -33,10 +30,8 @@ vi.mock('@/lib/instant', () => ({
 import { useUserManagement } from '../useUserManagement';
 
 // Get the mocked modules
-const { useQuery } = await import('@instantdb/react');
-const { db, dbHelpers, queries } = await import('@/lib/instant');
+const { db, dbHelpers, queries } = await import('../../lib/instant');
 
-const mockedUseQuery = vi.mocked(useQuery);
 const mockedDb = vi.mocked(db);
 const mockedDbHelpers = vi.mocked(dbHelpers);
 const mockedQueries = vi.mocked(queries);
@@ -44,33 +39,36 @@ const mockedQueries = vi.mocked(queries);
 describe('useUserManagement', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup mocked functions
-    mockedUseQuery.mockReturnValue({
+    mockedDb.useQuery.mockReturnValue({
       data: { users: [] },
       isLoading: false,
-      error: null,
-    });
-    
-    mockedDb.transact.mockResolvedValue(undefined);
-    mockedDb.queryOnce.mockResolvedValue({ data: { users: [] } });
-    
-    mockedDbHelpers.users.create.mockImplementation((userData: any) => ({
+      error: undefined,
+    } as any);
+
+    mockedDb.transact.mockResolvedValue({} as any);
+    mockedDb.queryOnce.mockResolvedValue({
+      data: { users: [] },
+      pageInfo: {}
+    } as any);
+
+    (mockedDbHelpers.users.create as any).mockImplementation((userData: any) => ({
       id: 'test-user-id',
       ...userData,
       joinedAt: new Date('2024-01-01T00:00:00Z'),
       lastSeen: new Date('2024-01-01T00:00:00Z'),
     }));
-    
-    mockedDbHelpers.users.updateOnlineStatus.mockImplementation((userId: string, isOnline: boolean) => ({
+
+    (mockedDbHelpers.users.updateOnlineStatus as any).mockImplementation((userId: string, isOnline: boolean) => ({
       type: 'update',
       userId,
       isOnline,
       lastSeen: new Date(),
     }));
-    
-    mockedQueries.onlineUsers.mockReturnValue({ users: { $: { where: { isOnline: true } } } });
-    
+
+    mockedQueries.onlineUsers.mockReturnValue({ users: { $: { where: { isOnline: true }, order: { joinedAt: 'asc' } } } });
+
     // Mock window events
     Object.defineProperty(window, 'addEventListener', {
       value: vi.fn(),
@@ -122,11 +120,11 @@ describe('useUserManagement', () => {
       },
     ];
 
-    mockedUseQuery.mockReturnValue({
+    mockedDb.useQuery.mockReturnValue({
       data: { users: mockUsers },
       isLoading: false,
-      error: null,
-    });
+      error: undefined,
+    } as any);
 
     const { result } = renderHook(() => useUserManagement());
 
@@ -135,7 +133,7 @@ describe('useUserManagement', () => {
   });
 
   it('should check alias uniqueness correctly', async () => {
-    mockedDb.queryOnce.mockResolvedValueOnce({ data: { users: [] } });
+    mockedDb.queryOnce.mockResolvedValueOnce({ data: { users: [] }, pageInfo: {} } as any);
 
     const { result } = renderHook(() => useUserManagement());
 
@@ -157,8 +155,9 @@ describe('useUserManagement', () => {
     mockedDb.queryOnce.mockResolvedValueOnce({
       data: {
         users: [{ id: 'existing-user', alias: 'existinguser' }]
-      }
-    });
+      },
+      pageInfo: {}
+    } as any);
 
     const { result } = renderHook(() => useUserManagement());
 
@@ -181,8 +180,8 @@ describe('useUserManagement', () => {
   });
 
   it('should join chat successfully', async () => {
-    mockedDb.queryOnce.mockResolvedValueOnce({ data: { users: [] } });
-    mockedDb.transact.mockResolvedValueOnce(undefined);
+    mockedDb.queryOnce.mockResolvedValueOnce({ data: { users: [] }, pageInfo: {} } as any);
+    mockedDb.transact.mockResolvedValueOnce({} as any);
 
     const { result } = renderHook(() => useUserManagement());
 
@@ -205,8 +204,9 @@ describe('useUserManagement', () => {
     mockedDb.queryOnce.mockResolvedValueOnce({
       data: {
         users: [{ id: 'existing-user', alias: 'existinguser' }]
-      }
-    });
+      },
+      pageInfo: {}
+    } as any);
 
     const { result } = renderHook(() => useUserManagement());
 
@@ -221,7 +221,7 @@ describe('useUserManagement', () => {
   });
 
   it('should handle join chat database errors', async () => {
-    mockedDb.queryOnce.mockResolvedValueOnce({ data: { users: [] } });
+    mockedDb.queryOnce.mockResolvedValueOnce({ data: { users: [] }, pageInfo: {} } as any);
     mockedDb.transact.mockRejectedValueOnce(new Error('Database error'));
 
     const { result } = renderHook(() => useUserManagement());
@@ -237,8 +237,8 @@ describe('useUserManagement', () => {
 
   it('should leave chat successfully', async () => {
     // First join a chat
-    mockedDb.queryOnce.mockResolvedValueOnce({ data: { users: [] } });
-    mockedDb.transact.mockResolvedValue(undefined);
+    mockedDb.queryOnce.mockResolvedValueOnce({ data: { users: [] }, pageInfo: {} } as any);
+    mockedDb.transact.mockResolvedValue({} as any);
 
     const { result } = renderHook(() => useUserManagement());
 
@@ -297,11 +297,11 @@ describe('useUserManagement', () => {
   });
 
   it('should handle loading state from query', () => {
-    mockedUseQuery.mockReturnValue({
-      data: null,
+    mockedDb.useQuery.mockReturnValue({
+      data: undefined,
       isLoading: true,
-      error: null,
-    });
+      error: undefined,
+    } as any);
 
     const { result } = renderHook(() => useUserManagement());
 
@@ -309,11 +309,11 @@ describe('useUserManagement', () => {
   });
 
   it('should handle query errors', () => {
-    mockedUseQuery.mockReturnValue({
-      data: null,
+    mockedDb.useQuery.mockReturnValue({
+      data: undefined,
       isLoading: false,
       error: new Error('Query failed'),
-    });
+    } as any);
 
     const { result } = renderHook(() => useUserManagement());
 
@@ -321,8 +321,8 @@ describe('useUserManagement', () => {
   });
 
   it('should normalize alias to lowercase and trim', async () => {
-    mockedDb.queryOnce.mockResolvedValueOnce({ data: { users: [] } });
-    mockedDb.transact.mockResolvedValueOnce(undefined);
+    mockedDb.queryOnce.mockResolvedValueOnce({ data: { users: [] }, pageInfo: {} } as any);
+    mockedDb.transact.mockResolvedValueOnce({} as any);
 
     const { result } = renderHook(() => useUserManagement());
 

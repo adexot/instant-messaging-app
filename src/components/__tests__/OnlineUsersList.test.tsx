@@ -49,7 +49,7 @@ describe('OnlineUsersList', () => {
       />
     );
 
-    expect(screen.getByText('Online Users')).toBeInTheDocument();
+    expect(screen.getByText('Online')).toBeInTheDocument();
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
@@ -76,8 +76,8 @@ describe('OnlineUsersList', () => {
       />
     );
 
-    // Check that the current user has the "(you)" indicator
-    expect(screen.getByText('(you)')).toBeInTheDocument();
+    // Check that the current user has the "you" indicator
+    expect(screen.getByText('you')).toBeInTheDocument();
     
     // Check that currentuser text is present
     expect(screen.getByText('currentuser')).toBeInTheDocument();

@@ -1,9 +1,12 @@
 import { AliasEntry } from './components/AliasEntry';
 import { OnlineUsersList } from './components/OnlineUsersList';
 import { MessageList } from './components/MessageList';
+import { MessageInput } from './components/MessageInput';
+import { TypingIndicator } from './components/TypingIndicator';
 import { CenteredLayout } from './components/Layout';
 import { useUserManagement } from './hooks/useUserManagement';
 import { useMessages } from './hooks/useMessages';
+import { useTyping } from './hooks/useTyping';
 import { Button } from '../@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
@@ -29,12 +32,22 @@ function App() {
     retryFailedMessage,
   } = useMessages({ currentUser });
 
+  const {
+    typingUsers,
+    startTyping,
+    stopTyping,
+  } = useTyping({ currentUser });
+
   const handleAliasSubmit = async (alias: string) => {
     await joinChat(alias);
   };
 
   const handleLeaveChat = async () => {
     await leaveChat();
+  };
+
+  const handleSendMessage = async (content: string) => {
+    await sendMessage(content);
   };
 
   if (!currentUser) {
@@ -89,7 +102,7 @@ function App() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-4 h-full">
           {/* Chat Area */}
           <div className="lg:col-span-3 flex flex-col">
-            <div className="flex-1 bg-card rounded-xl shadow-sm border overflow-hidden">
+            <div className="flex-1 bg-card rounded-xl shadow-sm border overflow-hidden flex flex-col">
               <MessageList
                 messages={messages}
                 currentUser={currentUser}
@@ -98,6 +111,17 @@ function App() {
                 onLoadMore={loadMoreMessages}
                 hasMoreMessages={hasMoreMessages}
                 onRetryFailedMessage={retryFailedMessage}
+              />
+              
+              {/* Typing Indicator */}
+              <TypingIndicator typingUsers={typingUsers} />
+              
+              {/* Message Input */}
+              <MessageInput
+                onSendMessage={handleSendMessage}
+                disabled={isLoading || !!error}
+                onTypingStart={startTyping}
+                onTypingStop={stopTyping}
               />
             </div>
           </div>

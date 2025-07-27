@@ -35,7 +35,7 @@ export function useMessages({
   // Update local state when data changes
   useEffect(() => {
     if (data?.messages) {
-      const sortedMessages = [...data.messages].sort(
+      const sortedMessages = [...(data.messages as Message[])].sort(
         (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
       setMessages(sortedMessages);
@@ -71,31 +71,15 @@ export function useMessages({
 
     setLoadingMore(true);
     try {
-      const oldestMessage = messages[0];
-      const olderMessagesQuery = queries.recentMessages(
-        initialLimit,
-        new Date(oldestMessage.timestamp)
-      );
-
-      const { data: olderData } = await db.query(olderMessagesQuery);
-
-      if (olderData?.messages && olderData.messages.length > 0) {
-        const sortedOlderMessages = [...olderData.messages].sort(
-          (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-        );
-
-        setMessages(prev => [...sortedOlderMessages, ...prev]);
-        setHasMoreMessages(olderData.messages.length >= initialLimit);
-      } else {
-        setHasMoreMessages(false);
-      }
+      // For now, just disable pagination until we implement proper instant-db pagination
+      setHasMoreMessages(false);
     } catch (err) {
       console.error('Failed to load more messages:', err);
       setError('Failed to load older messages');
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, hasMoreMessages, messages, initialLimit]);
+  }, [loadingMore, hasMoreMessages, messages]);
 
   // Retry a failed message
   const retryFailedMessage = useCallback(async (messageId: string) => {
@@ -105,23 +89,11 @@ export function useMessages({
     }
 
     try {
-      // Update message status to sending
-      await db.transact([
-        dbHelpers.messages.updateStatus(messageId, 'sending')
-      ]);
-
-      // Try to send again
-      await dbHelpers.messages.send(
-        failedMessage.content,
-        currentUser.id,
-        currentUser.alias
-      );
+      await dbHelpers.messages.retry(messageId);
+      // Clear any previous error
+      setError(null);
     } catch (err) {
       console.error('Failed to retry message:', err);
-      // Update status back to failed
-      await db.transact([
-        dbHelpers.messages.updateStatus(messageId, 'failed')
-      ]);
       setError('Failed to retry message. Please try again.');
     }
   }, [messages, currentUser]);

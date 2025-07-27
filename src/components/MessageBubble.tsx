@@ -1,6 +1,4 @@
-import React from 'react';
-import { Badge } from '../../@/components/ui/badge';
-import { Check, CheckCheck, Clock, AlertCircle } from 'lucide-react';
+import { CheckCheck, Clock, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import type { Message } from '../types';
 

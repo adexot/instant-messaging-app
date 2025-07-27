@@ -141,7 +141,7 @@ export function MessageList({
             </div>
           ) : (
             <div className="space-y-1">
-              {messages.map((message, index) => {
+              {messages.map((message) => {
                 const isOwnMessage = message.senderId === currentUser.id;
                 const showTimestamp = true;
                 
