@@ -151,10 +151,10 @@ describe('useUserManagement', () => {
     });
   });
 
-  it('should detect non-unique alias', async () => {
+  it('should detect non-unique alias when user is online', async () => {
     mockedDb.queryOnce.mockResolvedValueOnce({
       data: {
-        users: [{ id: 'existing-user', alias: 'existinguser' }]
+        users: [{ id: 'existing-user', alias: 'existinguser', isOnline: true }]
       },
       pageInfo: {}
     } as any);
@@ -164,6 +164,22 @@ describe('useUserManagement', () => {
     await act(async () => {
       const isUnique = await result.current.checkAliasUniqueness('existinguser');
       expect(isUnique).toBe(false);
+    });
+  });
+
+  it('should allow reusing alias from offline user', async () => {
+    mockedDb.queryOnce.mockResolvedValueOnce({
+      data: {
+        users: [{ id: 'existing-user', alias: 'existinguser', isOnline: false }]
+      },
+      pageInfo: {}
+    } as any);
+
+    const { result } = renderHook(() => useUserManagement());
+
+    await act(async () => {
+      const isUnique = await result.current.checkAliasUniqueness('existinguser');
+      expect(isUnique).toBe(true);
     });
   });
 
@@ -200,24 +216,33 @@ describe('useUserManagement', () => {
     expect(mockedDb.transact).toHaveBeenCalled();
   });
 
-  it('should handle join chat with duplicate alias', async () => {
+  it('should handle join chat with duplicate alias from online user', async () => {
+    // Mock session restoration call (first call on mount)
+    mockedDb.queryOnce.mockResolvedValueOnce({ data: null, pageInfo: {} } as any);
+    
+    const { result } = renderHook(() => useUserManagement());
+    
+    // Wait for session restoration to complete
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
+    // Mock the checkAliasUniqueness call - returns online user (not unique)
     mockedDb.queryOnce.mockResolvedValueOnce({
       data: {
-        users: [{ id: 'existing-user', alias: 'existinguser' }]
+        users: [{ id: 'existing-user', alias: 'existinguser', isOnline: true }]
       },
       pageInfo: {}
     } as any);
 
-    const { result } = renderHook(() => useUserManagement());
-
     await act(async () => {
       await expect(
         result.current.joinChat('existinguser')
-      ).rejects.toThrow('This alias is already taken');
+      ).rejects.toThrow('This alias is already taken by an online user');
     });
 
     expect(result.current.currentUser).toBeNull();
-    expect(result.current.error).toBe('This alias is already taken');
+    expect(result.current.error).toBe('This alias is already taken by an online user');
   });
 
   it('should handle join chat database errors', async () => {
