@@ -61,38 +61,40 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        "flex w-full mb-3 group",
+        "flex w-full mb-2 sm:mb-3 group",
         isOwnMessage ? "justify-end" : "justify-start"
       )}
     >
       <div className={cn("flex flex-col", isOwnMessage ? "items-end" : "items-start")}>
         {/* Sender alias for received messages */}
         {!isOwnMessage && (
-          <div className="text-xs font-medium text-muted-foreground mb-1 px-3">
+          <div className="text-xs font-medium text-muted-foreground mb-1 px-2 sm:px-3">
             {message.senderAlias}
           </div>
         )}
         
         <div
           className={cn(
-            "max-w-[70%] rounded-2xl px-4 py-3 break-words shadow-sm",
-            "transition-all duration-200 group-hover:shadow-md",
+            "max-w-[85%] sm:max-w-[75%] md:max-w-[70%] rounded-2xl px-3 sm:px-4 py-2 sm:py-3 break-words shadow-sm",
+            "transition-all duration-200 group-hover:shadow-md touch-manipulation",
+            "selection:bg-primary/20",
             isOwnMessage
               ? "bg-primary text-primary-foreground rounded-br-md"
               : "bg-card border text-foreground rounded-bl-md"
           )}
         >
           {/* Message content */}
-          <div className="whitespace-pre-wrap text-sm leading-relaxed">
+          <div className="whitespace-pre-wrap text-sm sm:text-sm leading-relaxed select-text">
             {message.content}
           </div>
         </div>
         
-        {/* Timestamp and status */}
+        {/* Timestamp and status - Always visible on mobile */}
         {showTimestamp && (
           <div
             className={cn(
-              "flex items-center gap-1 mt-1 px-3 text-xs opacity-0 group-hover:opacity-100 transition-opacity",
+              "flex items-center gap-1 mt-1 px-2 sm:px-3 text-xs transition-opacity",
+              "opacity-70 sm:opacity-0 sm:group-hover:opacity-100",
               isOwnMessage 
                 ? "text-muted-foreground justify-end" 
                 : "text-muted-foreground justify-start"

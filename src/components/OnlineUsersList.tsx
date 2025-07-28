@@ -99,7 +99,7 @@ export function OnlineUsersList({
       {/* Online users list */}
       <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
         {/* Header */}
-        <div className="border-b bg-muted/30 px-4 py-3">
+        <div className="border-b bg-muted/30 px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -113,8 +113,8 @@ export function OnlineUsersList({
         </div>
 
         {/* Users List */}
-        <ScrollArea className="h-80">
-          <div className="p-3">
+        <ScrollArea className="h-64 sm:h-80">
+          <div className="p-2 sm:p-3">
             {users.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
@@ -127,19 +127,19 @@ export function OnlineUsersList({
                 {users.map((user) => (
                   <div
                     key={user.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition-all duration-200 touch-manipulation ${
                       user.id === currentUser?.id 
                         ? 'bg-primary/10 border border-primary/20 shadow-sm' 
-                        : 'hover:bg-muted/50'
+                        : 'hover:bg-muted/50 active:bg-muted/70'
                     }`}
                   >
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border">
-                        <span className="text-sm font-semibold text-primary">
+                    <div className="relative shrink-0">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border">
+                        <span className="text-xs sm:text-sm font-semibold text-primary">
                           {user.alias.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-background"></div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">

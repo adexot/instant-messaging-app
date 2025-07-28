@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { ScrollArea } from '../../@/components/ui/scroll-area';
 import { Button } from '../../@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
@@ -18,7 +18,7 @@ interface MessageListProps {
   onRetryFailedMessage?: (messageId: string) => void;
 }
 
-export function MessageList({
+export const MessageList = forwardRef<{ scrollToBottom: () => void }, MessageListProps>(function MessageList({
   messages,
   currentUser,
   isLoading = false,
@@ -26,7 +26,7 @@ export function MessageList({
   onLoadMore,
   hasMoreMessages = false,
   onRetryFailedMessage,
-}: MessageListProps) {
+}, ref) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
@@ -39,6 +39,11 @@ export function MessageList({
       behavior: smooth ? 'smooth' : 'auto' 
     });
   };
+
+  // Expose scrollToBottom to parent component
+  useImperativeHandle(ref, () => ({
+    scrollToBottom: () => scrollToBottom(true),
+  }), []);
 
   // Check if user is near bottom of scroll area
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
@@ -89,12 +94,12 @@ export function MessageList({
 
   return (
     <div className="flex-1 relative flex flex-col h-full">
-      {/* Chat Header */}
-      <div className="border-b bg-muted/30 px-6 py-4">
+      {/* Chat Header - Mobile optimized */}
+      <div className="border-b bg-muted/30 px-3 sm:px-6 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold text-lg">Messages</h2>
-            <p className="text-sm text-muted-foreground">
+          <div className="min-w-0">
+            <h2 className="font-semibold text-base sm:text-lg truncate">Messages</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {messages.length === 0 ? 'No messages yet' : `${messages.length} messages`}
             </p>
           </div>
@@ -104,14 +109,14 @@ export function MessageList({
               size="sm"
               onClick={onLoadMore}
               disabled={isLoadingMore}
-              className="text-muted-foreground"
+              className="text-muted-foreground shrink-0 min-h-[44px] min-w-[44px] sm:min-h-auto sm:min-w-auto touch-manipulation"
             >
               {isLoadingMore ? (
                 <LoadingSpinner size="sm" />
               ) : (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Load more
+                  <RefreshCw className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Load more</span>
                 </>
               )}
             </Button>
@@ -119,13 +124,13 @@ export function MessageList({
         </div>
       </div>
 
-      {/* Messages Area */}
+      {/* Messages Area - Mobile optimized scrolling */}
       <ScrollArea 
         ref={scrollAreaRef}
         className="flex-1"
         onScroll={handleScroll}
       >
-        <div className="px-6 py-4">
+        <div className="px-3 sm:px-6 py-3 sm:py-4">
           {/* Messages */}
           {messages.length === 0 && !isLoading ? (
             <div className="flex items-center justify-center h-64">
@@ -153,14 +158,14 @@ export function MessageList({
                       showTimestamp={showTimestamp}
                     />
                     
-                    {/* Retry button for failed messages */}
+                    {/* Retry button for failed messages - Touch optimized */}
                     {message.status === 'failed' && isOwnMessage && (
                       <div className="flex justify-end -mt-2 mb-2 px-3">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleRetryMessage(message.id)}
-                          className="text-xs text-destructive hover:text-destructive-foreground hover:bg-destructive/10 h-6"
+                          className="text-xs text-destructive hover:text-destructive-foreground hover:bg-destructive/10 min-h-[32px] touch-manipulation active:scale-95 sm:active:scale-100"
                         >
                           <RefreshCw className="h-3 w-3 mr-1" />
                           Retry
@@ -188,21 +193,22 @@ export function MessageList({
         </div>
       </ScrollArea>
 
-      {/* Scroll to bottom button */}
+      {/* Scroll to bottom button - Touch optimized */}
       {showScrollToBottom && (
         <Button
           variant="secondary"
           size="sm"
           className={cn(
-            "absolute bottom-6 right-6 rounded-full shadow-lg border",
-            "transition-all duration-200 ease-in-out",
-            "hover:scale-105 bg-background/80 backdrop-blur-sm"
+            "absolute bottom-4 sm:bottom-6 right-3 sm:right-6 rounded-full shadow-lg border",
+            "transition-all duration-200 ease-in-out min-h-[48px] min-w-[48px] sm:min-h-auto sm:min-w-auto",
+            "hover:scale-105 active:scale-95 bg-background/80 backdrop-blur-sm touch-manipulation"
           )}
           onClick={() => scrollToBottom()}
+          aria-label="Scroll to bottom"
         >
           <ChevronDown className="h-4 w-4" />
         </Button>
       )}
     </div>
   );
-}
+});
