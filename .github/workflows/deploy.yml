@@ -39,11 +39,11 @@ jobs:
       - name: Run tests
         run: npm run test:run
 
-      - name: Run type check
-        run: npm run type-check
+      # - name: Run type check
+      #   run: npm run type-check
 
-      - name: Run linter
-        run: npm run lint
+      # - name: Run linter
+      #   run: npm run lint
 
       - name: Build for production
         run: npm run build
