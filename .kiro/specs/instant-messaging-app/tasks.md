@@ -85,7 +85,7 @@
   - Add toast notifications for system events
   - _Requirements: 1.2, 7.3, 7.4_
 
-- [ ] 12. Add performance optimizations
+- [x] 12. Add performance optimizations
   - Implement virtual scrolling for large message histories
   - Add message pagination and lazy loading
   - Optimize re-rendering with React.memo and useMemo
@@ -93,7 +93,7 @@
   - Add cleanup for old typing status records
   - _Requirements: 2.5, 6.2_
 
-- [ ] 13. Implement accessibility features
+- [x] 13. Implement accessibility features
   - Add proper ARIA labels and semantic HTML structure
   - Implement keyboard navigation for all interactive elements
   - Add screen reader support and announcements

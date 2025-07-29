@@ -97,16 +97,24 @@ export function OnlineUsersList({
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Online users list */}
-      <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+      <div 
+        className="bg-card rounded-xl shadow-sm border overflow-hidden"
+        role="region"
+        aria-label="Online users"
+      >
         {/* Header */}
         <div className="border-b bg-muted/30 px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <span className="font-medium text-sm">Online</span>
             </div>
-            <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-              <Circle className="h-2 w-2 fill-green-500 text-green-500" />
+            <Badge 
+              variant="secondary" 
+              className="flex items-center gap-1 text-xs"
+              aria-label={`${userCount} users online`}
+            >
+              <Circle className="h-2 w-2 fill-green-500 text-green-500" aria-hidden="true" />
               {userCount}
             </Badge>
           </div>
@@ -118,28 +126,40 @@ export function OnlineUsersList({
             {users.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Users className="h-6 w-6 text-muted-foreground" />
+                  <Users className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
                 </div>
                 <p className="text-sm text-muted-foreground">No users online</p>
               </div>
             ) : (
-              <div className="space-y-1">
+              <ul 
+                className="space-y-1"
+                role="list"
+                aria-label="Online users list"
+              >
                 {users.map((user) => (
-                  <div
+                  <li
                     key={user.id}
                     className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg transition-all duration-200 touch-manipulation ${
                       user.id === currentUser?.id 
                         ? 'bg-primary/10 border border-primary/20 shadow-sm' 
                         : 'hover:bg-muted/50 active:bg-muted/70'
                     }`}
+                    role="listitem"
+                    aria-label={`${user.alias}${user.id === currentUser?.id ? ' (you)' : ''}, joined ${formatTimeAgo(new Date(user.joinedAt))}`}
                   >
                     <div className="relative shrink-0">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border">
+                      <div 
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center border"
+                        aria-hidden="true"
+                      >
                         <span className="text-xs sm:text-sm font-semibold text-primary">
                           {user.alias.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                      <div 
+                        className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full border-2 border-background"
+                        aria-label="Online status indicator"
+                      ></div>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -154,9 +174,9 @@ export function OnlineUsersList({
                         Joined {formatTimeAgo(new Date(user.joinedAt))}
                       </p>
                     </div>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
           </div>
         </ScrollArea>
@@ -164,7 +184,11 @@ export function OnlineUsersList({
 
       {/* Join/Leave notifications */}
       {notifications.length > 0 && (
-        <div className="bg-card rounded-xl shadow-sm border overflow-hidden">
+        <div 
+          className="bg-card rounded-xl shadow-sm border overflow-hidden"
+          role="region"
+          aria-label="Recent activity"
+        >
           <div className="border-b bg-muted/30 px-4 py-2">
             <span className="font-medium text-sm">Activity</span>
           </div>
@@ -177,6 +201,8 @@ export function OnlineUsersList({
                     ? 'bg-green-50 text-green-700 border-green-200'
                     : 'bg-orange-50 text-orange-700 border-orange-200'
                 }`}
+                role="status"
+                aria-live="polite"
               >
                 <span className="font-medium">{notification.user.alias}</span>
                 {notification.type === 'joined' ? ' joined the chat' : ' left the chat'}

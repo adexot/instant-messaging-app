@@ -1,0 +1,173 @@
+/* Screen reader only content */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Show screen reader content when focused */
+.sr-only:focus,
+.sr-only:active {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: inherit !important;
+  margin: inherit !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: inherit !important;
+}
+
+/* Skip links styling */
+.skip-links a {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+  font-weight: 500;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  transition: top 0.2s ease-in-out;
+}
+
+.skip-links a:focus {
+  top: 6px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .message-bubble {
+    border: 2px solid currentColor;
+  }
+  
+  .user-avatar {
+    border: 2px solid currentColor;
+  }
+  
+  .typing-indicator {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-bounce,
+  .animate-spin,
+  .animate-pulse {
+    animation: none;
+  }
+  
+  .transition-all,
+  .transition-colors,
+  .transition-opacity {
+    transition: none;
+  }
+  
+  .animate-in {
+    animation: none;
+  }
+}
+
+/* Focus indicators */
+.focus-visible\:ring-ring\/50:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Ensure interactive elements have minimum touch target size */
+button,
+[role="button"],
+input,
+select,
+textarea {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (min-width: 640px) {
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea {
+    min-height: auto;
+    min-width: auto;
+  }
+}
+
+/* Improve text contrast in dark mode */
+@media (prefers-color-scheme: dark) {
+  .text-muted-foreground {
+    color: hsl(var(--muted-foreground) / 0.8);
+  }
+}
+
+/* Ensure sufficient color contrast for status indicators */
+.status-online {
+  background-color: #22c55e;
+}
+
+.status-offline {
+  background-color: #6b7280;
+}
+
+.status-typing {
+  background-color: #3b82f6;
+}
+
+/* Improve visibility of validation states */
+[aria-invalid="true"] {
+  border-color: hsl(var(--destructive));
+  box-shadow: 0 0 0 1px hsl(var(--destructive));
+}
+
+[aria-invalid="true"]:focus {
+  outline-color: hsl(var(--destructive));
+  box-shadow: 0 0 0 2px hsl(var(--destructive));
+}
+
+/* Ensure live regions are properly announced */
+[aria-live] {
+  position: relative;
+}
+
+/* Improve keyboard navigation visibility */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Ensure proper spacing for touch targets */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Improve readability of timestamps */
+.timestamp {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ensure proper contrast for disabled elements */
+:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Improve visibility of focus indicators in high contrast mode */
+@media (prefers-contrast: high) {
+  :focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+  }
+}

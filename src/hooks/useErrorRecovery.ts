@@ -31,7 +31,7 @@ export function useErrorRecovery(options: ErrorRecoveryOptions = {}) {
   });
 
   const toast = useToastHelpers();
-  const retryTimeoutRef = useRef<NodeJS.Timeout>();
+  const retryTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const executeWithRetry = useCallback(
     async <T>(
@@ -175,7 +175,7 @@ export function useNetworkErrorRecovery() {
 
 // Specialized hook for user operations
 export function useUserOperationRecovery() {
-  const toast = useToastHelpers();
+  // const toast = useToastHelpers();
 
   return useErrorRecovery({
     maxRetries: 2,

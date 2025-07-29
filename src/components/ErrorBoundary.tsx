@@ -1,6 +1,6 @@
-import React, { Component, ReactNode } from 'react';
+import React, { Component, type ReactNode } from 'react';
 import { ErrorState } from './ui/error';
-import { RefreshCw, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 interface Props {
   children: ReactNode;

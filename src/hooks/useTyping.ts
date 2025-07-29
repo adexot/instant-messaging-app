@@ -1,7 +1,25 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { db, queries, dbHelpers } from '../lib/instant';
 import type { TypingStatus, User } from '../types';
 import { TYPING_TIMEOUT } from '../types';
+
+// Debounce utility
+function useDebounce<T extends (...args: any[]) => any>(
+  callback: T,
+  delay: number
+): T {
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  
+  return useCallback((...args: Parameters<T>) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    timeoutRef.current = setTimeout(() => {
+      callback(...args);
+    }, delay);
+  }, [callback, delay]) as T;
+}
 
 interface UseTypingOptions {
   currentUser: User | null;
@@ -27,22 +45,40 @@ export function useTyping({ currentUser }: UseTypingOptions): UseTypingReturn {
     queries.typingUsers()
   );
 
+  // Memoized filtering of typing users for performance
+  const activeTypingUsers = useMemo(() => {
+    if (!data?.typingStatus) return [];
+    
+    const now = new Date();
+    return (data.typingStatus as unknown as TypingStatus[]).filter((status: TypingStatus) => {
+      const isNotCurrentUser = currentUser ? status.userId !== currentUser.id : true;
+      const isRecent = now.getTime() - new Date(status.lastTypingTime).getTime() < TYPING_TIMEOUT;
+      return isNotCurrentUser && status.isTyping && isRecent;
+    });
+  }, [data?.typingStatus, currentUser]);
+
   // Update local state when typing data changes
   useEffect(() => {
-    if (data?.typingStatus) {
-      // Filter out current user and expired typing statuses
-      const now = new Date();
-      const activeTypingUsers = (data.typingStatus as unknown as TypingStatus[]).filter((status: TypingStatus) => {
-        const isNotCurrentUser = currentUser ? status.userId !== currentUser.id : true;
-        const isRecent = now.getTime() - new Date(status.lastTypingTime).getTime() < TYPING_TIMEOUT;
-        return isNotCurrentUser && status.isTyping && isRecent;
-      });
-
-      setTypingUsers(activeTypingUsers);
-    }
+    setTypingUsers(activeTypingUsers);
     setIsLoading(dbLoading);
     setError(dbError ? 'Failed to load typing status' : null);
-  }, [data, dbLoading, dbError, currentUser]);
+  }, [activeTypingUsers, dbLoading, dbError]);
+
+  // Debounced typing indicator update
+  const debouncedStartTyping = useDebounce(async () => {
+    if (!currentUser) return;
+
+    try {
+      await dbHelpers.typingStatus.update(
+        currentUser.id,
+        true,
+        currentUser.alias
+      );
+    } catch (err) {
+      console.error('Failed to start typing indicator:', err);
+      setError('Failed to update typing status');
+    }
+  }, 300); // 300ms debounce
 
   // Start typing indicator
   const startTyping = useCallback(async () => {
@@ -50,30 +86,19 @@ export function useTyping({ currentUser }: UseTypingOptions): UseTypingReturn {
       return;
     }
 
-    try {
-      isCurrentlyTyping.current = true;
-      await dbHelpers.typingStatus.update(
-        currentUser.id,
-        true,
-        currentUser.alias
-      );
+    isCurrentlyTyping.current = true;
+    debouncedStartTyping();
 
-      // Clear existing timeout
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-
-      // Set timeout to automatically stop typing
-      typingTimeoutRef.current = setTimeout(() => {
-        stopTyping();
-      }, TYPING_TIMEOUT);
-
-    } catch (err) {
-      console.error('Failed to start typing indicator:', err);
-      setError('Failed to update typing status');
-      isCurrentlyTyping.current = false;
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
     }
-  }, [currentUser]);
+
+    // Set timeout to automatically stop typing
+    typingTimeoutRef.current = setTimeout(() => {
+      stopTyping();
+    }, TYPING_TIMEOUT);
+  }, [currentUser, debouncedStartTyping]);
 
   // Stop typing indicator
   const stopTyping = useCallback(async () => {

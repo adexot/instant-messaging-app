@@ -1,11 +1,13 @@
-import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle, useMemo, useCallback } from 'react';
 import { ScrollArea } from '../../@/components/ui/scroll-area';
 import { Button } from '../../@/components/ui/button';
 import { MessageBubble } from './MessageBubble';
+import { VirtualMessageList } from './VirtualMessageList';
 import { LoadingSpinner } from './ui/loading';
 import { ErrorMessage } from './ui/error';
 import { ChevronDown, RefreshCw } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useScreenReader } from '../hooks/useAccessibility';
 import type { Message, User } from '../types';
 
 interface MessageListProps {
@@ -16,9 +18,10 @@ interface MessageListProps {
   onLoadMore?: () => void;
   hasMoreMessages?: boolean;
   onRetryFailedMessage?: (messageId: string) => void;
+  useVirtualScrolling?: boolean;
 }
 
-export const MessageList = forwardRef<{ scrollToBottom: () => void }, MessageListProps>(function MessageList({
+export const MessageList = React.memo(forwardRef<{ scrollToBottom: () => void }, MessageListProps>(function MessageList({
   messages,
   currentUser,
   isLoading = false,
@@ -26,19 +29,26 @@ export const MessageList = forwardRef<{ scrollToBottom: () => void }, MessageLis
   onLoadMore,
   hasMoreMessages = false,
   onRetryFailedMessage,
+  useVirtualScrolling = false,
 }, ref) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [containerHeight, setContainerHeight] = useState(400);
+  const { announce } = useScreenReader();
+  
+  // Generate stable IDs for ARIA relationships
+  // const messagesRegionId = useAriaId('messages-region');
+  // const messagesListId = useAriaId('messages-list');
 
   // Auto-scroll to bottom for new messages
-  const scrollToBottom = (smooth = true) => {
+  const scrollToBottom = useCallback((smooth = true) => {
     messagesEndRef.current?.scrollIntoView({ 
       behavior: smooth ? 'smooth' : 'auto' 
     });
-  };
+  }, []);
 
   // Expose scrollToBottom to parent component
   useImperativeHandle(ref, () => ({
@@ -46,7 +56,7 @@ export const MessageList = forwardRef<{ scrollToBottom: () => void }, MessageLis
   }), []);
 
   // Check if user is near bottom of scroll area
-  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
     const nearBottom = distanceFromBottom < 100;
@@ -61,7 +71,7 @@ export const MessageList = forwardRef<{ scrollToBottom: () => void }, MessageLis
       // Reset loading state after a delay
       setTimeout(() => setIsLoadingMore(false), 1000);
     }
-  };
+  }, [hasMoreMessages, onLoadMore, isLoadingMore, messages.length]);
 
   // Auto-scroll to bottom when new messages arrive (only if user is near bottom)
   useEffect(() => {
@@ -71,18 +81,49 @@ export const MessageList = forwardRef<{ scrollToBottom: () => void }, MessageLis
     }
   }, [messages.length, isNearBottom]);
 
+  // Announce new messages for screen readers (but not too frequently)
+  const previousMessageCount = useRef(messages.length);
+  useEffect(() => {
+    if (messages.length > previousMessageCount.current && messages.length > 0) {
+      const newMessageCount = messages.length - previousMessageCount.current;
+      if (newMessageCount === 1) {
+        const latestMessage = messages[messages.length - 1];
+        if (latestMessage.senderId !== currentUser.id) {
+          announce(`New message from ${latestMessage.senderAlias}`);
+        }
+      } else if (newMessageCount > 1) {
+        announce(`${newMessageCount} new messages received`);
+      }
+    }
+    previousMessageCount.current = messages.length;
+  }, [messages.length, messages, currentUser.id, announce]);
+
   // Initial scroll to bottom when component mounts
   useEffect(() => {
     if (messages.length > 0) {
       scrollToBottom(false);
     }
+  }, [scrollToBottom]);
+
+  // Measure container height for virtual scrolling
+  useEffect(() => {
+    const updateHeight = () => {
+      if (scrollAreaRef.current) {
+        const rect = scrollAreaRef.current.getBoundingClientRect();
+        setContainerHeight(rect.height);
+      }
+    };
+
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
-  const handleRetryMessage = (messageId: string) => {
+  const handleRetryMessage = useCallback((messageId: string) => {
     if (onRetryFailedMessage) {
       onRetryFailedMessage(messageId);
     }
-  };
+  }, [onRetryFailedMessage]);
 
   if (error) {
     return (
@@ -132,7 +173,14 @@ export const MessageList = forwardRef<{ scrollToBottom: () => void }, MessageLis
       >
         <div className="px-3 sm:px-6 py-3 sm:py-4">
           {/* Messages */}
-          {messages.length === 0 && !isLoading ? (
+          {useVirtualScrolling && messages.length > 50 ? (
+            <VirtualMessageList
+              messages={messages}
+              currentUser={currentUser}
+              height={containerHeight - 100} // Account for padding and other elements
+              onRetryFailedMessage={handleRetryMessage}
+            />
+          ) : messages.length === 0 && !isLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="text-center space-y-3">
                 <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
@@ -145,37 +193,11 @@ export const MessageList = forwardRef<{ scrollToBottom: () => void }, MessageLis
               </div>
             </div>
           ) : (
-            <div className="space-y-1">
-              {messages.map((message) => {
-                const isOwnMessage = message.senderId === currentUser.id;
-                const showTimestamp = true;
-                
-                return (
-                  <div key={message.id} className="relative">
-                    <MessageBubble
-                      message={message}
-                      isOwnMessage={isOwnMessage}
-                      showTimestamp={showTimestamp}
-                    />
-                    
-                    {/* Retry button for failed messages - Touch optimized */}
-                    {message.status === 'failed' && isOwnMessage && (
-                      <div className="flex justify-end -mt-2 mb-2 px-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRetryMessage(message.id)}
-                          className="text-xs text-destructive hover:text-destructive-foreground hover:bg-destructive/10 min-h-[32px] touch-manipulation active:scale-95 sm:active:scale-100"
-                        >
-                          <RefreshCw className="h-3 w-3 mr-1" />
-                          Retry
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+            <OptimizedMessagesList 
+              messages={messages}
+              currentUser={currentUser}
+              onRetryMessage={handleRetryMessage}
+            />
           )}
 
           {/* Loading indicator */}
@@ -211,4 +233,51 @@ export const MessageList = forwardRef<{ scrollToBottom: () => void }, MessageLis
       )}
     </div>
   );
+}));
+
+// Optimized messages list with memoization
+const OptimizedMessagesList = React.memo(({ 
+  messages, 
+  currentUser, 
+  onRetryMessage 
+}: {
+  messages: Message[];
+  currentUser: User;
+  onRetryMessage: (messageId: string) => void;
+}) => {
+  const memoizedMessages = useMemo(() => {
+    return messages.map((message) => {
+      const isOwnMessage = message.senderId === currentUser.id;
+      const showTimestamp = true;
+      
+      return (
+        <div key={message.id} className="relative">
+          <MessageBubble
+            message={message}
+            isOwnMessage={isOwnMessage}
+            showTimestamp={showTimestamp}
+          />
+          
+          {/* Retry button for failed messages - Touch optimized */}
+          {message.status === 'failed' && isOwnMessage && (
+            <div className="flex justify-end -mt-2 mb-2 px-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onRetryMessage(message.id)}
+                className="text-xs text-destructive hover:text-destructive-foreground hover:bg-destructive/10 min-h-[32px] touch-manipulation active:scale-95 sm:active:scale-100"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Retry
+              </Button>
+            </div>
+          )}
+        </div>
+      );
+    });
+  }, [messages, currentUser.id, onRetryMessage]);
+
+  return <div className="space-y-1">{memoizedMessages}</div>;
 });
+
+OptimizedMessagesList.displayName = 'OptimizedMessagesList';

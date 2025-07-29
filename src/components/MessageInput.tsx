@@ -6,6 +6,7 @@ import { cn } from '../lib/utils';
 import { MESSAGE_CONSTRAINTS } from '../types';
 import { validateAndSanitize, RateLimiter } from '../lib/validation';
 import { useToastHelpers } from './ui/toast';
+import { useScreenReader, useAriaId } from '../hooks/useAccessibility';
 import { ErrorBoundary } from './ErrorBoundary';
 
 interface MessageInputProps {
@@ -30,6 +31,11 @@ export const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(func
   const inputRef = useRef<HTMLInputElement>(null);
   const rateLimiterRef = useRef(new RateLimiter(30, 60000)); // 30 messages per minute
   const toast = useToastHelpers();
+  const { announce } = useScreenReader();
+  
+  // Generate stable IDs for ARIA relationships
+  const errorMessageId = useAriaId('message-error');
+  const characterCountId = useAriaId('character-count');
   
   // Expose input ref to parent component
   useImperativeHandle(ref, () => inputRef.current!, []);
@@ -126,6 +132,7 @@ export const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(func
     try {
       await onSendMessage(validation.sanitized);
       setMessage(''); // Clear input on successful send
+      announce('Message sent');
       
       // Focus back to input
       setTimeout(() => {
@@ -133,7 +140,7 @@ export const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(func
       }, 100);
     } catch (error) {
       console.error('Failed to send message:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      // const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       
       // Show user-friendly error message
       toast.error('Message Failed', 'Your message could not be sent. Please try again.');
@@ -206,12 +213,17 @@ export const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(func
         </div>
       }
     >
-      <div className="border-t bg-card/50 backdrop-blur-sm p-3 sm:p-4">
+      <div 
+        className="border-t bg-card/50 backdrop-blur-sm p-3 sm:p-4"
+        role="region"
+        aria-label="Message input area"
+      >
         <form onSubmit={handleSubmit} className="space-y-2">
           <div className="flex gap-2 sm:gap-3">
             <div className="flex-1 relative">
               <Input
                 ref={inputRef}
+                id="message-input"
                 type="text"
                 value={message}
                 onChange={handleInputChange}
@@ -230,16 +242,24 @@ export const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(func
                 autoCorrect="off"
                 autoCapitalize="sentences"
                 spellCheck="true"
+                aria-label="Type your message"
+                aria-describedby={`${characterCountId} ${validationError ? errorMessageId : ''}`}
+                aria-invalid={!!validationError}
+                role="textbox"
+                aria-multiline="false"
               />
               
               {/* Character counter */}
               {isNearLimit && (
-                <div className={cn(
-                  "absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none",
-                  characterCount >= MESSAGE_CONSTRAINTS.MAX_LENGTH 
-                    ? "text-destructive" 
-                    : "text-warning"
-                )}>
+                <div 
+                  className={cn(
+                    "absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-xs font-medium pointer-events-none",
+                    characterCount >= MESSAGE_CONSTRAINTS.MAX_LENGTH 
+                      ? "text-destructive" 
+                      : "text-warning"
+                  )}
+                  aria-hidden="true"
+                >
                   {MESSAGE_CONSTRAINTS.MAX_LENGTH - characterCount}
                 </div>
               )}
@@ -254,20 +274,26 @@ export const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(func
                 "active:scale-95 sm:active:scale-100",
                 isMessageValid && !isSending && !disabled && "bg-primary hover:bg-primary/90"
               )}
-              aria-label="Send message"
+              aria-label={isSending ? "Sending message" : "Send message"}
+              aria-describedby={validationError ? errorMessageId : undefined}
             >
               {isSending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               ) : (
-                <Send className="h-4 w-4" />
+                <Send className="h-4 w-4" aria-hidden="true" />
               )}
             </Button>
           </div>
           
           {/* Validation error */}
           {validationError && (
-            <div className="flex items-center space-x-2 text-xs text-destructive">
-              <AlertCircle className="h-3 w-3" />
+            <div 
+              id={errorMessageId}
+              className="flex items-center space-x-2 text-xs text-destructive"
+              role="alert"
+              aria-live="assertive"
+            >
+              <AlertCircle className="h-3 w-3" aria-hidden="true" />
               <span>{validationError}</span>
             </div>
           )}
@@ -277,7 +303,12 @@ export const MessageInput = forwardRef<HTMLInputElement, MessageInputProps>(func
             <span className="hidden sm:inline">Press Enter to send</span>
             <span className="sm:hidden">Tap to send</span>
             {!isNearLimit && (
-              <span>{characterCount}/{MESSAGE_CONSTRAINTS.MAX_LENGTH}</span>
+              <span 
+                id={characterCountId}
+                aria-label={`${characterCount} of ${MESSAGE_CONSTRAINTS.MAX_LENGTH} characters used`}
+              >
+                {characterCount}/{MESSAGE_CONSTRAINTS.MAX_LENGTH}
+              </span>
             )}
           </div>
         </form>

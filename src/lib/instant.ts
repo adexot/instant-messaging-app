@@ -178,6 +178,38 @@ export const dbHelpers = {
         console.error('Failed to update typing status:', error);
       }
     },
+
+    // Cleanup old typing status records
+    cleanup: async (olderThanMs: number = 60000) => { // Default 1 minute
+      try {
+        const cutoffTime = new Date(Date.now() - olderThanMs);
+        
+        // Query for old typing status records
+        const { data } = await db.queryOnce({
+          typingStatus: {
+            $: {
+              where: {
+                lastTypingTime: { $lt: cutoffTime.toISOString() }
+              }
+            }
+          }
+        });
+
+        if (data?.typingStatus) {
+          // Delete old records
+          const deleteTransactions = (data.typingStatus as any[]).map((status: any) =>
+            tx.typingStatus[status.userId].delete()
+          );
+          
+          if (deleteTransactions.length > 0) {
+            await db.transact(deleteTransactions);
+            console.log(`Cleaned up ${deleteTransactions.length} old typing status records`);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to cleanup typing status:', error);
+      }
+    },
   },
 };
 

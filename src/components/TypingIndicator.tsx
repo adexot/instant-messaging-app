@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { cn } from '../lib/utils';
 import type { TypingStatus } from '../types';
 
@@ -7,7 +8,7 @@ interface TypingIndicatorProps {
   className?: string;
 }
 
-export function TypingIndicator({ typingUsers, className }: TypingIndicatorProps) {
+export const TypingIndicator = React.memo(function TypingIndicator({ typingUsers, className }: TypingIndicatorProps) {
   if (typingUsers.length === 0) {
     return null;
   }
@@ -27,14 +28,20 @@ export function TypingIndicator({ typingUsers, className }: TypingIndicatorProps
   };
 
   return (
-    <div className={cn(
-      "px-6 py-2 text-sm text-muted-foreground border-t bg-muted/30",
-      "animate-in slide-in-from-bottom-2 duration-200",
-      className
-    )}>
+    <div 
+      className={cn(
+        "px-6 py-2 text-sm text-muted-foreground border-t bg-muted/30",
+        "animate-in slide-in-from-bottom-2 duration-200",
+        className
+      )}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      aria-label="Typing indicator"
+    >
       <div className="flex items-center gap-2">
         {/* Animated typing dots */}
-        <div className="flex gap-1">
+        <div className="flex gap-1" aria-hidden="true">
           <div className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-bounce [animation-delay:-0.3s]" />
           <div className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-bounce [animation-delay:-0.15s]" />
           <div className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-bounce" />
@@ -47,4 +54,4 @@ export function TypingIndicator({ typingUsers, className }: TypingIndicatorProps
       </div>
     </div>
   );
-}
+});

@@ -7,6 +7,7 @@ import type { Message, User } from '../types';
 interface UseMessagesOptions {
   currentUser: User | null;
   initialLimit?: number;
+  pageSize?: number;
 }
 
 interface UseMessagesReturn {
@@ -21,13 +22,15 @@ interface UseMessagesReturn {
 
 export function useMessages({
   currentUser,
-  initialLimit = 50
+  initialLimit = 50,
+  pageSize = 25
 }: UseMessagesOptions): UseMessagesReturn {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Connection and offline queue management
   const { status: connectionStatus } = useConnection();
@@ -96,15 +99,25 @@ export function useMessages({
 
     setLoadingMore(true);
     try {
-      // For now, just disable pagination until we implement proper instant-db pagination
-      setHasMoreMessages(false);
+      const nextPage = currentPage + 1;
+      const totalToLoad = nextPage * pageSize;
+      
+      // Check if we have more messages to load
+      if (messages.length >= totalToLoad) {
+        setHasMoreMessages(false);
+      } else {
+        setCurrentPage(nextPage);
+        // In a real implementation, you would fetch older messages here
+        // For now, we'll simulate pagination by checking message count
+        setHasMoreMessages(messages.length >= totalToLoad);
+      }
     } catch (err) {
       console.error('Failed to load more messages:', err);
       setError('Failed to load older messages');
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, hasMoreMessages, messages]);
+  }, [loadingMore, hasMoreMessages, messages.length, currentPage, pageSize]);
 
   // Retry a failed message
   const retryFailedMessage = useCallback(async (messageId: string) => {

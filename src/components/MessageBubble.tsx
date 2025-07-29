@@ -1,7 +1,9 @@
+import React from 'react';
 import { CheckCheck, Clock, AlertCircle, RotateCcw } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from '../../@/components/ui/button';
 import { useToastHelpers } from './ui/toast';
+import { useAriaId } from '../hooks/useAccessibility';
 import { ErrorBoundary } from './ErrorBoundary';
 import type { Message } from '../types';
 
@@ -12,13 +14,15 @@ interface MessageBubbleProps {
   onRetry?: (messageId: string) => void;
 }
 
-export function MessageBubble({ 
+export const MessageBubble = React.memo(function MessageBubble({ 
   message, 
   isOwnMessage, 
   showTimestamp = true,
   onRetry
 }: MessageBubbleProps) {
   const toast = useToastHelpers();
+  const messageId = useAriaId('message');
+  const timestampId = useAriaId('timestamp');
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date();
     const messageDate = new Date(timestamp);
@@ -74,9 +78,9 @@ export function MessageBubble({
                 variant="ghost"
                 onClick={handleRetry}
                 className="h-4 w-4 p-0 text-destructive hover:text-destructive/80"
-                title="Retry sending message"
+                aria-label="Retry sending message"
               >
-                <RotateCcw className="h-3 w-3" />
+                <RotateCcw className="h-3 w-3" aria-hidden="true" />
               </Button>
             )}
           </div>
@@ -101,16 +105,22 @@ export function MessageBubble({
           "flex w-full mb-2 sm:mb-3 group",
           isOwnMessage ? "justify-end" : "justify-start"
         )}
+        role="group"
+        aria-labelledby={messageId}
       >
         <div className={cn("flex flex-col", isOwnMessage ? "items-end" : "items-start")}>
           {/* Sender alias for received messages */}
           {!isOwnMessage && (
-            <div className="text-xs font-medium text-muted-foreground mb-1 px-2 sm:px-3">
+            <div 
+              className="text-xs font-medium text-muted-foreground mb-1 px-2 sm:px-3"
+              aria-label={`Message from ${message.senderAlias}`}
+            >
               {message.senderAlias}
             </div>
           )}
           
           <div
+            id={messageId}
             className={cn(
               "max-w-[85%] sm:max-w-[75%] md:max-w-[70%] rounded-2xl px-3 sm:px-4 py-2 sm:py-3 break-words shadow-sm",
               "transition-all duration-200 group-hover:shadow-md touch-manipulation",
@@ -120,16 +130,26 @@ export function MessageBubble({
                 : "bg-card border text-foreground rounded-bl-md",
               message.status === 'failed' && isOwnMessage && "bg-destructive/10 border-destructive/20 text-foreground"
             )}
+            role="article"
+            aria-describedby={showTimestamp ? timestampId : undefined}
+            aria-label={`${isOwnMessage ? 'Your' : message.senderAlias + "'s"} message`}
           >
             {/* Message content */}
-            <div className="whitespace-pre-wrap text-sm sm:text-sm leading-relaxed select-text">
+            <div 
+              className="whitespace-pre-wrap text-sm sm:text-sm leading-relaxed select-text"
+              role="text"
+            >
               {message.content}
             </div>
             
             {/* Failed message indicator */}
             {message.status === 'failed' && isOwnMessage && (
-              <div className="text-xs text-destructive mt-1 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
+              <div 
+                className="text-xs text-destructive mt-1 flex items-center gap-1"
+                role="alert"
+                aria-live="assertive"
+              >
+                <AlertCircle className="h-3 w-3" aria-hidden="true" />
                 <span>Failed to send</span>
               </div>
             )}
@@ -138,6 +158,7 @@ export function MessageBubble({
           {/* Timestamp and status - Always visible on mobile */}
           {showTimestamp && (
             <div
+              id={timestampId}
               className={cn(
                 "flex items-center gap-1 mt-1 px-2 sm:px-3 text-xs transition-opacity",
                 "opacity-70 sm:opacity-0 sm:group-hover:opacity-100",
@@ -145,13 +166,18 @@ export function MessageBubble({
                   ? "text-muted-foreground justify-end" 
                   : "text-muted-foreground justify-start"
               )}
+              aria-label={`Sent at ${formatTimestamp(message.timestamp)}`}
             >
               <span>{formatTimestamp(message.timestamp)}</span>
-              {isOwnMessage && getStatusIcon()}
+              {isOwnMessage && (
+                <span aria-label={`Message status: ${message.status || 'delivered'}`}>
+                  {getStatusIcon()}
+                </span>
+              )}
             </div>
           )}
         </div>
       </div>
     </ErrorBoundary>
   );
-}
+});

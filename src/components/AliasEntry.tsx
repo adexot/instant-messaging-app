@@ -18,6 +18,7 @@ import { Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { validateAndSanitize, RateLimiter } from '../lib/validation';
 import { InlineError } from './ui/error';
 import { useToastHelpers } from './ui/toast';
+import { useScreenReader, useAriaId } from '../hooks/useAccessibility';
 import { ErrorBoundary } from './ErrorBoundary';
 import type { AliasFormData } from '../types';
 
@@ -41,7 +42,12 @@ export function AliasEntry({ onAliasSubmit, checkAliasUniqueness, isLoading = fa
   const [isUnique, setIsUnique] = useState<boolean | null>(null);
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
   const toast = useToastHelpers();
+  const { announce } = useScreenReader();
   const rateLimiterRef = useRef(new RateLimiter(10, 60000)); // 10 attempts per minute
+  
+  // Generate stable IDs for ARIA relationships
+  const validationStatusId = useAriaId('validation-status');
+  const errorMessageId = useAriaId('error-message');
 
   const form = useForm<AliasFormData>({
     resolver: zodResolver(aliasSchema),
@@ -91,9 +97,11 @@ export function AliasEntry({ onAliasSubmit, checkAliasUniqueness, isLoading = fa
         if (!isUnique) {
           setIsUnique(false);
           setUniquenessError('This alias is already taken. Please choose a different one.');
+          announce('Alias is already taken. Please choose a different one.');
         } else {
           setIsUnique(true);
           setUniquenessError(null);
+          announce('Alias is available.');
         }
       } catch (error) {
         console.error('Error checking alias uniqueness:', error);
@@ -117,7 +125,7 @@ export function AliasEntry({ onAliasSubmit, checkAliasUniqueness, isLoading = fa
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [watchedAlias, checkAliasUniqueness, toast]);
+  }, [watchedAlias, checkAliasUniqueness, toast, announce]);
 
   const onSubmit = async (data: AliasFormData) => {
     if (!isUnique || rateLimitError) {
@@ -176,13 +184,18 @@ export function AliasEntry({ onAliasSubmit, checkAliasUniqueness, isLoading = fa
         <div className="space-y-4">
           <div className="text-center space-y-2">
             <h1 className="text-2xl font-bold">Join Chat</h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground" id="form-description">
               Choose a unique alias to start messaging
             </p>
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form 
+              onSubmit={form.handleSubmit(onSubmit)} 
+              className="space-y-4"
+              aria-describedby="form-description"
+              noValidate
+            >
               <FormField
                 control={form.control}
                 name="alias"
@@ -192,16 +205,24 @@ export function AliasEntry({ onAliasSubmit, checkAliasUniqueness, isLoading = fa
                     <div className="relative">
                       <FormControl>
                         <Input
-                          placeholder="Enter your alias"
                           {...field}
+                          placeholder="Enter your alias"
                           disabled={isLoading}
                           className="pr-10"
                           autoComplete="off"
                           autoFocus
                           maxLength={20}
+                          aria-describedby={`${validationStatusId} ${errorMessageId}`}
+                          aria-invalid={!!uniquenessError || !!rateLimitError || !!form.formState.errors.alias}
+                          aria-required="true"
                         />
                       </FormControl>
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div 
+                        className="absolute right-3 top-1/2 -translate-y-1/2"
+                        id={validationStatusId}
+                        aria-live="polite"
+                        aria-atomic="true"
+                      >
                         {getValidationIcon()}
                       </div>
                     </div>
@@ -210,11 +231,17 @@ export function AliasEntry({ onAliasSubmit, checkAliasUniqueness, isLoading = fa
                     </FormDescription>
                     <FormMessage />
                     {uniquenessError && (
-                      <InlineError message={uniquenessError} />
+                      <div id={errorMessageId} role="alert" aria-live="assertive">
+                        <InlineError message={uniquenessError} />
+                      </div>
                     )}
                     {rateLimitError && (
-                      <div className="flex items-center space-x-2 text-sm text-warning bg-warning/10 border border-warning/20 rounded-md p-2">
-                        <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                      <div 
+                        className="flex items-center space-x-2 text-sm text-warning bg-warning/10 border border-warning/20 rounded-md p-2"
+                        role="alert"
+                        aria-live="assertive"
+                      >
+                        <AlertTriangle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
                         <span>{rateLimitError}</span>
                       </div>
                     )}
@@ -226,10 +253,11 @@ export function AliasEntry({ onAliasSubmit, checkAliasUniqueness, isLoading = fa
                 type="submit"
                 className="w-full"
                 disabled={!isFormValid || isLoading}
+                aria-describedby={isFormValid ? undefined : errorMessageId}
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
                     Joining...
                   </>
                 ) : (
