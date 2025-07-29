@@ -29,7 +29,7 @@ export interface AppConfig {
 // Default configuration
 const defaultConfig: AppConfig = {
   instantDb: {
-    appId: import.meta.env.VITE_INSTANT_APP_ID || 'your-app-id',
+    appId: import.meta.env.VITE_INSTANT_APP_ID || '824af4ff-5ff9-43b3-af1b-6de3fcac579d',
     connectionTimeout: 10000, // 10 seconds
     retryAttempts: 3,
     retryDelay: 1000, // 1 second
