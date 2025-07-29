@@ -5,6 +5,7 @@ import { MobileUsersSheet } from './components/MobileUsersSheet';
 import { MessageList } from './components/MessageList';
 import { MessageInput } from './components/MessageInput';
 import { TypingIndicator } from './components/TypingIndicator';
+import { ConnectionStatus, ConnectionStatusHeader } from './components/ConnectionStatus';
 import { CenteredLayout } from './components/Layout';
 import { useUserManagement } from './hooks/useUserManagement';
 import { useMessages } from './hooks/useMessages';
@@ -110,6 +111,9 @@ function App() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Connection status indicator */}
+              <ConnectionStatusHeader />
+              
               {/* Mobile users sheet */}
               <MobileUsersSheet
                 users={onlineUsers}
@@ -130,6 +134,9 @@ function App() {
           </div>
         </div>
       </header>
+
+      {/* Connection Status Banner */}
+      <ConnectionStatus />
 
       {/* Main Content - Mobile-first responsive with keyboard adjustment */}
       <main 

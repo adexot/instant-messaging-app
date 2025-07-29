@@ -9,20 +9,38 @@ const db = init({
 // Connection management utilities
 export const connectionManager = {
   // Check if database is connected
-  isConnected: () => {
+  isConnected: async () => {
     try {
-      // This will be implemented based on instant-db connection status
-      return true; // Placeholder
+      // Test connection with a simple query
+      await db.queryOnce({ users: { $: { limit: 1 } } });
+      return true;
     } catch {
       return false;
     }
   },
 
   // Get connection status
-  getStatus: () => ({
-    isConnected: connectionManager.isConnected(),
+  getStatus: async () => ({
+    isConnected: await connectionManager.isConnected(),
     timestamp: new Date(),
   }),
+
+  // Test connection with timeout
+  testConnection: async (timeoutMs = 5000): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => resolve(false), timeoutMs);
+      
+      connectionManager.isConnected()
+        .then((connected) => {
+          clearTimeout(timeout);
+          resolve(connected);
+        })
+        .catch(() => {
+          clearTimeout(timeout);
+          resolve(false);
+        });
+    });
+  },
 };
 
 // Helper functions for database operations

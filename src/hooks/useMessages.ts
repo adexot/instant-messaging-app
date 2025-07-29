@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db, queries, dbHelpers } from '../lib/instant';
+import { useConnection } from './useConnection';
+import { useOfflineQueue } from './useOfflineQueue';
 import type { Message, User } from '../types';
 
 interface UseMessagesOptions {
@@ -27,6 +29,10 @@ export function useMessages({
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
+  // Connection and offline queue management
+  const { status: connectionStatus } = useConnection();
+  const { queuedMessages, addToQueue, processQueue } = useOfflineQueue();
+
   // Subscribe to messages from instant-db
   const { data, isLoading: dbLoading, error: dbError } = db.useQuery(
     queries.chatData()
@@ -45,9 +51,25 @@ export function useMessages({
     setError(dbError ? 'Failed to load messages' : null);
   }, [data, dbLoading, dbError, initialLimit]);
 
-  // Send a new message
+  // Send a new message with offline support
   const sendMessage = useCallback(async (content: string) => {
     if (!currentUser || !content.trim()) {
+      return;
+    }
+
+    const messageId = dbHelpers.generateId();
+    const messageData = {
+      id: messageId,
+      content: content.trim(),
+      senderId: currentUser.id,
+      senderAlias: currentUser.alias,
+      timestamp: new Date(),
+    };
+
+    // If offline, add to queue
+    if (connectionStatus !== 'connected') {
+      addToQueue(messageData);
+      console.log('Message queued for offline sending:', messageId);
       return;
     }
 
@@ -59,9 +81,12 @@ export function useMessages({
       );
     } catch (err) {
       console.error('Failed to send message:', err);
-      setError('Failed to send message. Please try again.');
+      
+      // Add to offline queue if send fails
+      addToQueue(messageData);
+      setError('Message queued for retry when connection is restored.');
     }
-  }, [currentUser]);
+  }, [currentUser, connectionStatus, addToQueue]);
 
   // Load more messages (pagination)
   const loadMoreMessages = useCallback(async () => {
@@ -97,6 +122,21 @@ export function useMessages({
       setError('Failed to retry message. Please try again.');
     }
   }, [messages, currentUser]);
+
+  // Process offline queue when connection is restored
+  useEffect(() => {
+    if (connectionStatus === 'connected' && queuedMessages.length > 0) {
+      console.log('Connection restored, processing offline queue...');
+      
+      processQueue(async (queuedMessage) => {
+        await dbHelpers.messages.send(
+          queuedMessage.content,
+          queuedMessage.senderId,
+          queuedMessage.senderAlias
+        );
+      });
+    }
+  }, [connectionStatus, queuedMessages.length, processQueue]);
 
   return {
     messages,
