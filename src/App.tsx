@@ -7,6 +7,9 @@ import { MessageInput } from './components/MessageInput';
 import { TypingIndicator } from './components/TypingIndicator';
 import { ConnectionStatus, ConnectionStatusHeader } from './components/ConnectionStatus';
 import { CenteredLayout } from './components/Layout';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { ToastProvider, useToastHelpers } from './components/ui/toast';
+import { ChatSkeleton } from './components/ui/skeleton';
 import { useUserManagement } from './hooks/useUserManagement';
 import { useMessages } from './hooks/useMessages';
 import { useTyping } from './hooks/useTyping';
@@ -15,9 +18,10 @@ import { useKeyboardShortcuts, createChatShortcuts } from './hooks/useKeyboardSh
 import { Button } from '../@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
-function App() {
+function AppContent() {
   const messageInputRef = useRef<HTMLInputElement>(null);
   const messageListRef = useRef<{ scrollToBottom: () => void }>(null);
+  const toast = useToastHelpers();
   
   const {
     currentUser,
@@ -49,15 +53,29 @@ function App() {
   const keyboardState = useMobileKeyboard();
 
   const handleAliasSubmit = async (alias: string) => {
-    await joinChat(alias);
+    try {
+      await joinChat(alias);
+      toast.success('Welcome to the chat!', `You joined as ${alias}`);
+    } catch (error) {
+      toast.error('Failed to join chat', error instanceof Error ? error.message : 'Please try again');
+    }
   };
 
   const handleLeaveChat = async () => {
-    await leaveChat();
+    try {
+      await leaveChat();
+      toast.info('Left chat', 'You have left the chat room');
+    } catch (error) {
+      toast.error('Failed to leave chat', 'Please refresh the page');
+    }
   };
 
   const handleSendMessage = async (content: string) => {
-    await sendMessage(content);
+    try {
+      await sendMessage(content);
+    } catch (error) {
+      toast.error('Message failed to send', 'Your message could not be delivered');
+    }
   };
 
   // Desktop keyboard shortcuts
@@ -73,6 +91,11 @@ function App() {
   });
 
   useKeyboardShortcuts(shortcuts, !!currentUser);
+
+  // Show loading skeleton while initializing
+  if (isLoading && !currentUser && !error) {
+    return <ChatSkeleton />;
+  }
 
   if (!currentUser) {
     return (
@@ -194,6 +217,21 @@ function App() {
         )}
       </main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        // In a real app, you might want to send this to an error reporting service
+        console.error('App Error Boundary caught an error:', error, errorInfo);
+      }}
+    >
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

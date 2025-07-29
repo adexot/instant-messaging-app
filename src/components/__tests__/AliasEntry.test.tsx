@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { render } from '../../test-utils';
 import userEvent from '@testing-library/user-event';
 import { AliasEntry } from '../AliasEntry';
 
@@ -67,17 +68,17 @@ describe('AliasEntry', () => {
     });
   });
 
-  it('shows validation error for alias too long', async () => {
+  it('prevents typing more than 20 characters', async () => {
     const user = userEvent.setup();
     render(<AliasEntry onAliasSubmit={mockOnAliasSubmit} checkAliasUniqueness={mockCheckAliasUniqueness} />);
     
-    const input = screen.getByPlaceholderText('Enter your alias');
+    const input = screen.getByPlaceholderText('Enter your alias') as HTMLInputElement;
     
-    await user.type(input, 'a'.repeat(21)); // 21 characters, max is 20
+    await user.type(input, 'a'.repeat(25)); // Try to type 25 characters
     
-    await waitFor(() => {
-      expect(screen.getByText('Alias must be no more than 20 characters')).toBeInTheDocument();
-    });
+    // Input should only contain 20 characters due to maxLength attribute
+    expect(input.value).toBe('a'.repeat(20));
+    expect(input.value.length).toBe(20);
   });
 
   it('shows validation error for invalid characters', async () => {
