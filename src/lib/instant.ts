@@ -1,9 +1,10 @@
 import { init, tx, id } from '@instantdb/react';
 import type { User, Message, TypingStatus } from '../types';
+import { config } from '../config/environment';
 
-// Initialize instant-db
+// Initialize instant-db with environment configuration
 const db = init({
-  appId: import.meta.env.VITE_INSTANT_APP_ID || 'your-app-id',
+  appId: config.instantDb.appId,
 });
 
 // Connection management utilities

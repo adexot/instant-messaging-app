@@ -1,69 +1,187 @@
-# React + TypeScript + Vite
+# Instant Messaging App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, real-time messaging application built with React, TypeScript, and Instant DB. Features include real-time messaging, typing indicators, user presence, offline support, and full accessibility compliance.
 
-Currently, two official plugins are available:
+## ✨ Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Real-time Messaging**: Instant message delivery using Instant DB
+- **User Presence**: See who's online and typing in real-time
+- **Offline Support**: Queue messages when offline, sync when reconnected
+- **Responsive Design**: Mobile-first design that works on all devices
+- **Accessibility**: Full WCAG compliance with screen reader support
+- **Performance**: Virtual scrolling for large message histories
+- **Modern UI**: Clean interface built with shadcn/ui and Tailwind CSS
 
-## Expanding the ESLint configuration
+## 🚀 Quick Start
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Prerequisites
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Node.js 18+ 
+- npm or yarn
+- An Instant DB app ID
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+### Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd instant-messaging
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Install dependencies:
+```bash
+npm install
 ```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
+
+4. Add your Instant DB app ID to `.env`:
+```env
+VITE_INSTANT_APP_ID=your-instant-db-app-id-here
+```
+
+5. Start the development server:
+```bash
+npm run dev
+```
+
+The app will be available at `http://localhost:3000`.
+
+## 🛠️ Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run build:analyze` - Build and analyze bundle size
+- `npm run preview` - Preview production build
+- `npm run test` - Run tests in watch mode
+- `npm run test:run` - Run tests once
+- `npm run test:coverage` - Run tests with coverage
+- `npm run lint` - Lint code
+- `npm run lint:fix` - Lint and fix issues
+- `npm run type-check` - Check TypeScript types
+- `npm run clean` - Clean build artifacts
+
+## 🏗️ Architecture
+
+### Tech Stack
+
+- **Frontend**: React 18+ with TypeScript
+- **Real-time Database**: Instant DB
+- **UI Components**: shadcn/ui with Radix UI primitives
+- **Styling**: Tailwind CSS
+- **Build Tool**: Vite
+- **Testing**: Vitest + React Testing Library
+
+### Key Components
+
+- **App**: Main application container with error boundaries
+- **AliasEntry**: User registration with alias validation
+- **MessageList**: Virtual scrolling message display
+- **MessageInput**: Message composition with typing indicators
+- **OnlineUsersList**: Real-time user presence
+- **ConnectionStatus**: Network status monitoring
+
+### State Management
+
+- React Context for global state
+- Custom hooks for feature-specific logic
+- Instant DB for real-time data synchronization
+
+## 🎯 Configuration
+
+The app supports multiple environments with different configurations:
+
+- **Development**: Optimized for debugging with smaller page sizes
+- **Production**: Performance-optimized with larger page sizes
+- **Test**: Fast execution with minimal features
+
+Configuration is managed in `src/config/environment.ts` with feature flags for:
+
+- Virtual scrolling threshold
+- Typing indicators
+- Offline support
+- Animations
+- Performance settings
+
+## 🧪 Testing
+
+The app includes comprehensive testing:
+
+- **Unit Tests**: Component and hook testing
+- **Integration Tests**: Real-time functionality testing
+- **Accessibility Tests**: WCAG compliance verification
+
+Run tests with:
+```bash
+npm run test:run
+```
+
+## 📱 Mobile Support
+
+- Touch-friendly interface with 44px minimum touch targets
+- Mobile keyboard handling and viewport adjustments
+- Responsive design with mobile-first approach
+- iOS safe area support
+- Android back button handling
+
+## ♿ Accessibility
+
+- WCAG 2.1 AA compliance
+- Screen reader support with ARIA labels
+- Keyboard navigation for all features
+- High contrast mode support
+- Focus management for dynamic content
+- Live regions for real-time updates
+
+## 🔧 Performance Optimizations
+
+- Virtual scrolling for large message lists
+- Message pagination and lazy loading
+- Component memoization with React.memo
+- Efficient re-rendering with useMemo/useCallback
+- Bundle splitting for optimal caching
+- Debounced typing indicators
+
+## 🌐 Browser Support
+
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**App won't connect to Instant DB**
+- Verify your `VITE_INSTANT_APP_ID` is set correctly in `.env`
+- Check network connectivity
+- Ensure Instant DB service is running
+
+**Messages not appearing**
+- Check browser console for errors
+- Verify WebSocket connection in Network tab
+- Try refreshing the page
+
+**Performance issues**
+- Enable virtual scrolling in settings
+- Clear browser cache
+- Check for memory leaks in DevTools
+
+For more help, check the [Issues](https://github.com/your-repo/issues) page.
