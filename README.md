@@ -50,12 +50,20 @@ npm run dev
 
 The app will be available at `http://localhost:3000`.
 
+## 🚀 Live Demo
+
+A live demo is automatically deployed to GitHub Pages: [View Demo](https://yourusername.github.io/instant-messaging-app/)
+
+*Note: Replace `yourusername` with your actual GitHub username*
+
 ## 🛠️ Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
+- `npm run build:github` - Build for GitHub Pages deployment
 - `npm run build:analyze` - Build and analyze bundle size
 - `npm run preview` - Preview production build
+- `npm run preview:github` - Preview GitHub Pages build locally
 - `npm run test` - Run tests in watch mode
 - `npm run test:run` - Run tests once
 - `npm run test:coverage` - Run tests with coverage
@@ -144,6 +152,21 @@ npm run test:run
 - Efficient re-rendering with useMemo/useCallback
 - Bundle splitting for optimal caching
 - Debounced typing indicators
+
+## 🚀 CI/CD Pipeline
+
+The project includes automated GitHub Actions workflows:
+
+- **Continuous Integration**: Runs tests, type checking, and linting on every push
+- **Continuous Deployment**: Automatically deploys to GitHub Pages on main branch updates
+- **Quality Gates**: Deployment only proceeds if all tests pass
+
+### Workflow Features:
+- Node.js 18 environment
+- Dependency caching for faster builds
+- Comprehensive testing pipeline
+- Automatic artifact generation
+- Zero-downtime deployments
 
 ## 🌐 Browser Support
 

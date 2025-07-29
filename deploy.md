@@ -16,6 +16,30 @@ Ensure these environment variables are set in your deployment platform:
 VITE_INSTANT_APP_ID=your-instant-db-app-id-here
 ```
 
+## GitHub Pages Deployment (Automated)
+
+The repository includes a GitHub Actions workflow that automatically deploys to GitHub Pages on every push to main.
+
+### Setup:
+
+1. **Enable GitHub Pages:**
+   - Go to your repository Settings → Pages
+   - Set Source to "GitHub Actions"
+
+2. **Add Environment Variable:**
+   - Go to repository Settings → Secrets and variables → Actions
+   - Add a new repository secret: `VITE_INSTANT_APP_ID` with your Instant DB app ID
+
+3. **Deploy:**
+   - Push to main branch or manually trigger the workflow
+   - Your app will be available at: `https://yourusername.github.io/instant-messaging-app/`
+
+### Local Testing for GitHub Pages:
+```bash
+npm run build:github
+npm run preview:github
+```
+
 ## Vercel Deployment
 
 1. Install Vercel CLI:

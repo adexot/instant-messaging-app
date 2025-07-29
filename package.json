@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:github": "NODE_ENV=production npm run build",
     "build:analyze": "npm run build && npx vite-bundle-analyzer dist",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
+    "preview:github": "NODE_ENV=production vite preview --base=/instant-messaging-app/",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",

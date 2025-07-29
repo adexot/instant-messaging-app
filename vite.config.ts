@@ -15,6 +15,8 @@ export default defineConfig({
   define: {
     global: 'globalThis',
   },
+  // Set base path for GitHub Pages deployment
+  base: process.env.NODE_ENV === 'production' ? '/instant-messaging-app/' : '/',
   build: {
     // Optimize chunk splitting for better caching
     rollupOptions: {
