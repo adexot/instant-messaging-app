@@ -23,5 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
+# Kiro IDE files
+.kiro/
+
 
 .env
